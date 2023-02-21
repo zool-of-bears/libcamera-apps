@@ -50,7 +50,7 @@ message(STATUS "libcamera library found:")
 message(STATUS "    version: ${LIBCAMERA_VERSION}")
 message(STATUS "    libraries: ${LIBCAMERA_LINK_LIBRARIES}")
 message(STATUS "    include path: ${LIBCAMERA_INCLUDE_DIRS}")
-include_directories(${CMAKE_SOURCE_DIR} ${LIBCAMERA_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBCAMERA_INCLUDE_DIRS})
 
 add_subdirectory(core)
 add_subdirectory(encoder)
