@@ -18,7 +18,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     add_compile_options(-Wno-psabi)
 endif()
 
-option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 IF (NOT ENABLE_COMPILE_FLAGS_FOR_TARGET)
     # On a Pi this will give us armhf or arm64.
