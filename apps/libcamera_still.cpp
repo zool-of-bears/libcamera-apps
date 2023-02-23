@@ -63,13 +63,19 @@ static void update_latest_link(std::string const &filename, StillOptions const *
 	{
 		struct stat buf;
 		if (stat(options->latest.c_str(), &buf) == 0 && unlink(options->latest.c_str()))
+		{
 			LOG_ERROR("WARNING: could not delete latest link " << options->latest);
+		}
 		else
 		{
 			if (symlink(filename.c_str(), options->latest.c_str()))
+			{
 				LOG_ERROR("WARNING: failed to create latest link " << options->latest);
+			}
 			else
+			{
 				LOG(2, "Link " << options->latest << " created");
+			}
 		}
 	}
 }

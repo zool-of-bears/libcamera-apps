@@ -634,3 +634,62 @@ void jpeg_save(std::vector<libcamera::Span<uint8_t>> const &mem, StreamInfo cons
 		throw;
 	}
 }
+
+std::vector<unsigned char> jpeg_save_buffer(std::vector<libcamera::Span<uint8_t>> const &mem, StreamInfo const &info,
+								   libcamera::ControlList const &metadata, std::string const &cam_model,
+								   StillOptions const *options)
+{
+	uint8_t *thumb_buffer = nullptr;
+	unsigned char *exif_buffer = nullptr;
+	uint8_t *jpeg_buffer = nullptr;
+
+	try
+	{
+		if ((info.width & 1) || (info.height & 1))
+			throw std::runtime_error("both width and height must be even");
+		if (mem.size() != 1)
+			throw std::runtime_error("only single plane YUV supported");
+
+		// Make all the EXIF data, which includes the thumbnail.
+
+		jpeg_mem_len_t thumb_len = 0; // stays zero if no thumbnail
+		unsigned int exif_len;
+		create_exif_data(mem, info, metadata, cam_model, options, exif_buffer, exif_len, thumb_buffer, thumb_len);
+
+		// Make the full size JPEG (could probably be more efficient if we had
+		// YUV422 or YUV420 planar format).
+
+		jpeg_mem_len_t jpeg_len;
+		YUV_to_JPEG((uint8_t *)(mem[0].data()), info, info.width, info.height, options->quality, options->restart,
+					jpeg_buffer, jpeg_len);
+		LOG(2, "JPEG size is " << jpeg_len);
+
+		// Write everything out.
+		LOG(2, "EXIF data len " << exif_len);
+
+		std::vector<unsigned char> data;
+		data.reserve(sizeof(exif_header) + exif_len + thumb_len + 2 + jpeg_len);
+		std::copy(exif_header, exif_header + sizeof(exif_header), std::back_inserter(data));
+		data.push_back(static_cast<unsigned char>((exif_len + thumb_len + 2) >> 8));
+		data.push_back(static_cast<unsigned char>((exif_len + thumb_len + 2) & 0xff));
+		std::copy(exif_buffer, exif_buffer + exif_len, std::back_inserter(data));
+		if(thumb_len)
+			std::copy(thumb_buffer, thumb_buffer + thumb_len, std::back_inserter(data));
+		std::copy(jpeg_buffer + exif_image_offset, jpeg_buffer + jpeg_len, std::back_inserter(data));
+
+		free(exif_buffer);
+		exif_buffer = nullptr;
+		free(thumb_buffer);
+		thumb_buffer = nullptr;
+		free(jpeg_buffer);
+		jpeg_buffer = nullptr;
+		return data;
+	}
+	catch (std::exception const &e)
+	{
+		free(exif_buffer);
+		free(thumb_buffer);
+		free(jpeg_buffer);
+		throw;
+	}
+}

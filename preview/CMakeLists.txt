@@ -9,7 +9,7 @@ pkg_check_modules(QTCORE QUIET Qt5Core)
 pkg_check_modules(QTWIDGETS QUIET Qt5Widgets)
 
 set(SRC "preview.cpp")
-set(TARGET_LIBS "")
+set(TARGET_LIBS hubs_logging)
 
 IF (NOT DEFINED ENABLE_DRM)
     SET(ENABLE_DRM 1)
